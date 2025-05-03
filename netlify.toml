@@ -1,3 +1,11 @@
 [build]
   publish = "frontend"
   functions = "netlify/functions"
+
+[build.environment]
+  PYTHON_VERSION = "3.10"
+
+[functions]
+  included_files = ["netlify/functions/ask_ai/requirements.txt"]
+  runtime = "python3.10"
+  
