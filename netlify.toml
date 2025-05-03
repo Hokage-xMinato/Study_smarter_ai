@@ -1,3 +1,4 @@
+# netlify.toml
 [build]
   publish = "frontend"
   functions = "netlify/functions"
@@ -8,4 +9,9 @@
 [functions]
   included_files = ["netlify/functions/ask_ai/requirements.txt"]
   runtime = "python3.10"
+
+[dev]
+  command = "npm run dev"
+  functions = "netlify/functions"
+  functionsPort = 8888
   
