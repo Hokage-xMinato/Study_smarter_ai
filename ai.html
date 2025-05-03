@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Smarter AI</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .chat-container-wrapper {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #chat-container {
+            border: 1px solid #ddd;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+
+        .user-message, .ai-message {
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            border-radius: 15px;
+            clear: both;
+        }
+
+        .user-message {
+            background-color: #e0f7fa;
+            color: #00838f;
+            text-align: right;
+            float: right;
+        }
+
+        .ai-message {
+            background-color: #e8f5e9;
+            color: #388e3c;
+            text-align: left;
+            float: left;
+        }
+
+        #user-input {
+            width: calc(100% - 80px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        #send-button {
+            padding: 10px 15px;
+            background-color: #00bcd4;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #send-button:hover {
+            background-color: #26c6da;
+        }
+
+        .error-message {
+            color: red;
+            font-style: italic;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container-wrapper">
+        <div id="chat-container">
+            <div class="ai-message">Hello! I am Study Smarter AI. How can I help you with your studies?</div>
+        </div>
+        <input type="text" id="user-input" placeholder="Ask me anything...">
+        <button id="send-button">Send</button>
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const backendUrl = '/.netlify/functions/ask_ai';
+        const chatHistoryKey = 'studySmarterChatHistory';
+        let currentChatHistory = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const storedHistory = sessionStorage.getItem(chatHistoryKey);
+            if (storedHistory) {
+                chatContainer.innerHTML = storedHistory;
+                const messageDivs = chatContainer.querySelectorAll('.user-message, .ai-message');
+                messageDivs.forEach(div => {
+                    currentChatHistory.push({ role: div.classList.contains('user-message') ? 'user' : 'model', text: div.textContent });
+                });
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            } else {
+                appendMessage('ai-message', 'Hello! I am Study Smarter AI. How can I help you with your studies?');
+                currentChatHistory.push({ role: 'model', text: 'Hello! I am Study Smarter AI. How can I help you with your studies?' });
+            }
+        });
+
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        async function sendMessage() {
+            const query = userInput.value.trim();
+            if (query) {
+                appendMessage('user-message', query);
+                currentChatHistory.push({ role: 'user', text: query });
+                userInput.value = '';
+
+                try {
+                    const response = await fetch(backendUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ query: query, chatHistory: currentChatHistory })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    const aiResponse = data.response;
+                    appendMessage('ai-message', aiResponse);
+                    currentChatHistory.push({ role: 'model', text: aiResponse });
+
+                } catch (error) {
+                    appendMessage('error-message', `Error: ${error.message}`);
+                }
+
+                sessionStorage.setItem(chatHistoryKey, chatContainer.innerHTML);
+            }
+        }
+
+        function appendMessage(className, message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add(className);
+            messageDiv.textContent = message;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    </script>
+</body>
+  </html>
+
