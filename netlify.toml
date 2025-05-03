@@ -4,7 +4,7 @@ publish = "frontend"
 functions = "netlify/functions"
 
 [build.environment]
-  PYTHON_VERSION = "3.x"
+  PYTHON_VERSION = "3.10"
 
 [dev]
   command = "npm run dev"
